@@ -1,0 +1,25 @@
+{
+    "brand": "Mykola",
+    "links": [
+        {
+            "name": "Home",
+            "url": "/"
+        },
+        {
+            "name": "Projects",
+            "url": "/projects"
+        },
+        {
+            "name": "About",
+            "url": "/about"
+        },
+        {
+            "name": "Contact",
+            "url": "/contact"
+        },
+        {
+            "name": "Skills",
+            "url": "/skills"
+        }
+    ]
+}

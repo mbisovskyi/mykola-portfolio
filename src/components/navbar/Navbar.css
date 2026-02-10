@@ -1,0 +1,61 @@
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--text-color);
+  position: relative;
+  margin: 0rem 1rem;
+}
+
+.nav-link.active {
+  color: var(--primary-color);
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0%;
+  bottom: -3px;
+  height: 1px;
+  background: var(--accent-color);
+  animation: slideIn 0.4s ease forwards;
+}
+
+@keyframes slideIn {
+    0% { left: 0%; width: 0% }
+    50% { left: 5%; width: 110% }
+    75% { left: -5%; width: 90%; }
+    100% { left: 0%; width: 100%; }
+}
+
+/* Responsive Navbar design */
+@media (max-width: 768px) {
+    .navbar-brand {
+        display: none;
+    }
+    .navbar-container {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-container {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .navbar-container {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 330px) {
+    .navbar-container {
+        font-size: 0.55rem;
+    }
+}
