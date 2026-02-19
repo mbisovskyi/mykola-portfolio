@@ -1,0 +1,7 @@
+.no-x-scrollbar {
+  overflow: hidden;
+}
+
+.yes-x-scrollbar {
+  overflow: auto;
+}

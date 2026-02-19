@@ -5,18 +5,17 @@ import { NavLink } from "react-router-dom";
 import navbarData from "../../data/static/navbar.json";
 
 import "./Navbar.css";
+import AudioControl from "../audio-control/AudioControl";
 function Navbar() {
     return (
         <>
             <div className="navbar-container">
-                <p className="navbar-brand">{navbarData.brand}</p>
-                <nav className="links-container">
+                <nav className="nav-items">
                     {navbarData.links.map((link, index) => (
                         <NavLink key={index} to={link.url} className="nav-link">{link.name}</NavLink>
-                    ))}
+                    ))}                       
                 </nav>
-
-
+                <AudioControl />
             </div>
         </>
     )

@@ -1,5 +1,12 @@
 {
     "name": "Mykola",
     "title": "Fullstack Software Engineer",
-    "description": "I am a passionate software engineer with experience in building scalable web applications. I enjoy working with modern technologies and continuously learning new skills."
+    "images": [
+        {
+            "name": "mykola",
+            "alt": "Mykola",
+            "path": "/assets/images/mykola.png",
+            "defaultWidth": 400
+        }
+    ]
 }

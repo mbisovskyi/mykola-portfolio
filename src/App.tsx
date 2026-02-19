@@ -1,13 +1,19 @@
+// React imports
 import { Route, Routes } from 'react-router-dom'
-import './App.css'
+
+// Component imports
 import Navbar from './components/navbar/Navbar'
+
+// Page imports
 import HomePage from './pages/home/HomePage'
 import ProjectsPage from './pages/projects/ProjectsPage'
 import AboutPage from './pages/about/AboutPage'
 import ContactPage from './pages/contact/ContactPage'
 import SkillsPage from './pages/skills/SkillsPage'
 
+import './App.css'
 function App() {
+
     return (
     <>
       <div className="app-container">

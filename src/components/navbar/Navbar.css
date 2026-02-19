@@ -1,30 +1,50 @@
 .navbar-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    position: relative;
+    vertical-align: middle;
+}
+
+.nav-items {
+    display: flex;
+}
+
+.navbar-brand {
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.nav-item {
+    margin: 0rem 1rem;
 }
 
 .nav-link {
-  text-decoration: none;
-  color: var(--text-color);
-  position: relative;
-  margin: 0rem 1rem;
+    display: block;
+    text-decoration: none;
+    color: var(--text-color);
+    position: relative;
+    margin: 0rem 1rem;
 }
 
 .nav-link.active {
-  color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .nav-link.active::after {
-  content: "";
-  position: absolute;
-  left: 0%;
-  bottom: -3px;
-  height: 1px;
-  background: var(--accent-color);
-  animation: slideIn 0.4s ease forwards;
+    content: "";
+    position: absolute;
+    left: 0%;
+    bottom: -3px;
+    height: 1px;
+    background: var(--accent-color);
+    animation: slideIn 0.4s ease forwards;
 }
 
+/* Animations */
 @keyframes slideIn {
     0% { left: 0%; width: 0% }
     50% { left: 5%; width: 110% }
