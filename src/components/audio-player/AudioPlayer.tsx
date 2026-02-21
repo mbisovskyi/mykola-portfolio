@@ -4,23 +4,25 @@ import { useState, useEffect } from 'react';
 import styles from './AudioPlayer.module.css';
 export function AudioPlayer({ audio }: AudioPlayerProps){
 
-    const [repeatTimeoutTime] = useState(3000);
     const [volume, setVolume] = useState<number>(0.1);
     const [playing, setPlaying] = useState<boolean>(false);
+    
+    const repeatTimeoutTime: number = 3000;
+    const audioSettingsStorageItemName: string = "audioSettings";
 
 // #region Rendering
 
     // Effect on the entire component reload
     useEffect(() => {
-        initAudioFromStorage(audio);
+        initAudio(audio);
+        initAudioAutoPlay(audio);        
         initAudioEnded(audio);
         initBeforeUnload(audio);
-        initAudioAutoPlay(audio, volume, setPlaying);        
     }, [])
 
     // Effect on the [volume, playing] state update
     useEffect(() => {
-        const audioSettings: AudioSettings = getAudioSettingsObject(audio);
+        const audioSettings: AudioSettings = getAudioSettings(audio);
         setAudioSettingsToStorage(audioSettings);
     }, [volume, playing])
 
@@ -58,40 +60,85 @@ export function AudioPlayer({ audio }: AudioPlayerProps){
 
 // #region Component Functions
 
-function getAudioSettingsObject(audio: HTMLAudioElement): AudioSettings {
-    const audioSettings: AudioSettings = {
-        volume: audio.volume,
+/**
+ * Compiles current/default AudioSettings object.
+ * @returns AudioSettings
+ */
+function getAudioSettings(): AudioSettings;
+/**
+ * Compiles AudioSettings object from Audio HTMLAudioElement object.
+ * @param audio - object to compile settings from.
+ * @returns AudioSettings
+ */
+function getAudioSettings(audio: HTMLAudioElement): AudioSettings;
+/**
+ * Compiles saved into storage settings. In case when item in storage is not found or not parsable null is returned.
+ * @param itemName - storage item name to parse settings from.
+ * @returns AudioSettings | null
+ */
+function getAudioSettings(itemName: string): AudioSettings | null;
+function getAudioSettings(arg1?: HTMLAudioElement | string): AudioSettings | null {
+
+    // Initialize default AudioSettings object
+    let audioSettings: AudioSettings = {
+        volume: volume,
         playing: playing,
-        time: audio.currentTime
+        time: 0
     }
 
+    // Check if any argument is provided
+    if (arg1){
+        switch (true) {
+
+            // If argument is HTMLAudioElement then get its settings
+            case arg1 instanceof HTMLAudioElement:
+                audioSettings.volume = audio.volume;
+                audioSettings.time = audio.currentTime;
+                break;
+
+            // Use provided storage item name to pull settings from
+            // If not found or not parsable - return null
+            case typeof arg1 === "string":
+                const item: string | null = sessionStorage.getItem(arg1);
+                if (item) {
+                    const parsedItem: AudioSettings = JSON.parse(item);
+                    if (parsedItem) {
+                        audioSettings = parsedItem
+                    } else {
+                        return null;
+                    };
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    
     return audioSettings;
 }
 
 function setAudioSettingsToStorage(audioSettings: AudioSettings) {
-    sessionStorage.setItem("audioSettings", JSON.stringify(audioSettings));
+    sessionStorage.setItem(audioSettingsStorageItemName, JSON.stringify(audioSettings));
 }
 
-function initAudioFromStorage(audio: HTMLAudioElement){
-    const item: string | null = sessionStorage.getItem("audioSettings");
-    if (item) {
-        const audioSettings: AudioSettings | null = JSON.parse(item);
+function initAudio(audio: HTMLAudioElement) {
+    // Try to init audio using settings saved into storage.
+    let audioSettings: AudioSettings | null = getAudioSettings(audioSettingsStorageItemName);
 
-        if (audioSettings) {
+    // If no audio setting saved in the storage, get current/default settings
+    if (!audioSettings) audioSettings = getAudioSettings();
+    // Init audio
+    audio.volume = audioSettings.volume;
+    audio.currentTime = audioSettings.time;
 
-            // initialize audio using parameters that were saved to the storage.
-            audio.volume = audioSettings.volume;
-            audio.currentTime = audioSettings.time;
-
-            // update volume state variable to set slider to proper position
-            setVolume(audio.volume);
-        }
-    }
-}
+    // Set state variable
+    setVolume(audioSettings.volume);
+    setPlaying(audioSettings.playing);
+}   
 
 function initBeforeUnload(audio: HTMLAudioElement){
     const handler = () => {
-            let audioSettings: AudioSettings = getAudioSettingsObject(audio);
+            let audioSettings: AudioSettings = getAudioSettings(audio);
             setAudioSettingsToStorage(audioSettings);
             window.removeEventListener("beforeunload", handler);
         }
@@ -119,8 +166,7 @@ function initAudioEnded(audio: HTMLAudioElement) {
     }
 }
 
-function initAudioAutoPlay(audio: HTMLAudioElement, volume: number, setPlaying: React.Dispatch<React.SetStateAction<boolean>>){
-    audio.volume = volume;
+function initAudioAutoPlay(audio: HTMLAudioElement){
     audio.play().then(() => {
         setPlaying(true);
     }).catch(() => {
