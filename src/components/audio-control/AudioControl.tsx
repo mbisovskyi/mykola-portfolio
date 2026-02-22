@@ -13,7 +13,7 @@ export function AudioControl({ audio }: AudioControlProps){
     const repeatTimeoutTime: number = 3000;
     const audioSettingsStorageItemName: string = "audioSettings";
 
-    const [playing, setPlaying] = useState<boolean>(false);
+    const [_playing, setPlaying] = useState<boolean>(false);
     const [volume, setVolume] = useState<number>(() => {
         const audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName);
         if (!audioSettings) return 0.1;
