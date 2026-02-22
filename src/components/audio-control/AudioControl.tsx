@@ -1,173 +1,165 @@
-import { useEffect, useState, useRef } from "react";
-import bgMusicFile from "/assets/audio/background-music.mp3";
-import styles from "./AudioControl.module.css";
-import { GiMusicalNotes as ActiveMusicIcon } from "react-icons/gi";
-import { MdOutlineMusicOff as InactiveMusicIcon } from "react-icons/md";
-import type AudioSettings from "../../interfaces/audio-settings";
+// React imports
+import { useState, useEffect } from 'react';
 
-function AudioControl(){
+// Utils imports
+import { loadAudioSettingsFromStorage, resetAudioSettingsToStorage, saveAudioSettingsToStorage } from '../../utils/storage-manager';
 
-  // Background Music variables
-  const bgMusicRef: React.RefObject<HTMLAudioElement> = useRef(new Audio(bgMusicFile));
-  const [bgMusicSettings, setBgMusicSettings] = useState<AudioSettings>(initAudio("BgMusic", bgMusicRef.current, 0.5));
+// Type imports
+import type AudioSettings from '../../interfaces/audio-settings';
 
-  // Render related variables
-  const [renderControl, setRenderControl] = useState(false);
-  const [minScreenWidth] = useState(768);
+import styles from './AudioControl.module.css';
+export function AudioControl({ audio }: AudioControlProps){
 
+    const repeatTimeoutTime: number = 3000;
+    const audioSettingsStorageItemName: string = "audioSettings";
 
-/* #region Component Rendering Logic */
-  useEffect(() => {
-    if (window.innerWidth < minScreenWidth) return;
-    setupBgMusic();
-  }, []);
-
-  if (!renderControl) return null;
-
-/* #endregion */
-
-/* #region Component Template */
-  return (
-
-    <>
-      <svg width="0" height="0">
-        <defs>
-          <linearGradient id="audioGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#4A90E2" />
-            <stop offset="50%" stopColor="#71b4ff" />
-            <stop offset="100%" stopColor="#50E3C2" />
-            <animateTransform
-              attributeName="gradientTransform"
-              type="translate"
-              values="-1 0; 1 0; -1 0"
-              dur="3s"
-              repeatCount="indefinite"          
-            />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      <div id="audioControl" className={`${styles.container} ${styles.displayAnimation}`}>
-
-      {/* Music Active State Icon */}
-        {!bgMusicSettings.active ? 
-          <button className={`${styles.icon}`} onClick={() => {handleToggleAudio(bgMusicRef.current, setBgMusicSettings)}}><InactiveMusicIcon /></button> 
-        : 
-          <button className={`${styles.icon}`} onClick={() => {handleToggleAudio(bgMusicRef.current, setBgMusicSettings)}}><ActiveMusicIcon className={styles.activeMusic}/></button>}
-
-        {/* Volume Slider */} 
-        <input type="range" min="0" max="1" step="0.01" value={bgMusicSettings.volume} onChange={(e) => {handleAudioVolumeChange(e, bgMusicRef.current, bgMusicSettings, setBgMusicSettings)}}/>
-      </div>
-    </>
+    const [playing, setPlaying] = useState<boolean>(false);
+    const [volume, setVolume] = useState<number>(() => {
+        const audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName);
+        if (!audioSettings) return 0.1;
+        return audioSettings.volume;
+    });
 
 
-  );
-/* #endregion */
+// #region Rendering
 
-/* #region Component Functions */
-  function setupBgMusic(){
-    const savedSettings: AudioSettings | null = getSavedAudioSettings("BgMusic");
+    // Effect on the entire component reload
+    useEffect(() => {
+        initAudioAutoPlay(audio);        
+        initAudio(audio);
+        initAudioEnded(audio);
+        initBeforeUnload(audio);
+    }, [])
 
-    if (savedSettings) {
-      bgMusicRef.current.volume = savedSettings.volume;
-      setBgMusicSettings(settings => ({ ...settings, volume: savedSettings.volume, currentTime: savedSettings.currentTime}))
+// #endregion
 
-      if (savedSettings.active) {
-        bgMusicRef.current.currentTime = savedSettings.currentTime;
-      }
+// #region Template
+
+    return (
+        <div className={styles.container}>
+            <div>
+                <button onClick={() => {handlePlayPause(audio)}}>Play/Pause</button>
+            </div>
+            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => {handleVolumeChange(e)}}/>
+        </div>
+    )
+
+// #endregion
+
+// #region Handlers
+
+    function handleVolumeChange(event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>){
+        const volume: number = Number(event.target.value);
+        audio.volume = volume;
+        setVolume(volume);
+        resetAudioSettingsToStorage(audioSettingsStorageItemName, audio);
     }
 
-    bgMusicRef.current.play().then(() => {
-      setRenderControl(true);
-      }).catch(() => {
-        const startBgMusic_onClick = () => {
-          if (!savedSettings) {
-            bgMusicRef.current.play();
-            setBgMusicSettings(settings => ({...settings, active: true}));
-          } else {
-            setBgMusicSettings(settings => ({...settings, active: savedSettings.active, currentTime: savedSettings.currentTime}));
-            if (savedSettings.active) {
-              bgMusicRef.current.play();
-            }
-          }
+    function handlePlayPause(audio: HTMLAudioElement) {
+        setPlaying(currentState => {
+            const nextState: boolean = !currentState;
+            nextState ? audio.play() : audio.pause();
+            resetAudioSettingsToStorage(audioSettingsStorageItemName, audio, { playing: nextState });
+            return nextState;
+        });
+    }
+// #endregion
 
-          setRenderControl(true);
-          window.removeEventListener("click", startBgMusic_onClick);
-        };
-        
-        setBgMusicSettings(settings => ({...settings, active: false}));
-        window.addEventListener("click", startBgMusic_onClick);
-      });
+// #region Component Functions
 
-    return () => {
-      bgMusicRef.current.pause();
-    };
-  }
+function initAudio(audio: HTMLAudioElement) {
+    // Try to init audio using settings saved into storage.
+    let audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName);
 
-  function handleToggleAudio(audio: HTMLAudioElement, setAudioSettings: React.Dispatch<React.SetStateAction<AudioSettings>>){
-    setAudioSettings(currentState => {
-      // capture the next audio active state
-      const nextState = !currentState.active; 
-      
-      // // stop/play audio based on the next audio active state
-      toggleAudio(audio, nextState); 
+    if (audioSettings) {
+        // Init audio
+        audio.volume = audioSettings.volume;
+        audio.currentTime = audioSettings.time;
 
-      // set next state to rerender component
-      const updated = {...currentState, active: nextState, volume: audio.volume, currentTime: audio.currentTime}; 
+        // Set state variable
+        setVolume(audioSettings.volume);
+        setPlaying(audioSettings.playing);
+    }
+}   
 
-      // save audio settings to session storage 
-      saveAudioSettings(updated); 
-      return updated;
-    });
-  };
-/* #endregion */
+function initBeforeUnload(audio: HTMLAudioElement){
+    const handler = () => {
+            resetAudioSettingsToStorage(audioSettingsStorageItemName, audio);
+            window.removeEventListener("beforeunload", handler);
+        }
+
+    window.addEventListener("beforeunload", handler);
 }
 
-/* #region Private Functions */
-  function initAudio(name: string, audio: HTMLAudioElement, volume: number): AudioSettings {
-    // Compile Audio Settings object. Save current time of the audio.
-    const settings: AudioSettings = {
-      name: name,
-      volume: audio.volume > 0 ? audio.volume : volume,
-      active: false,
-      currentTime: audio.currentTime > 0 ? audio.currentTime : 0
+function initAudioEnded(audio: HTMLAudioElement) {
+    let timeoutId: number | null = null;
+
+    const handler = () => {
+        audio.currentTime = 0
+        timeoutId = setTimeout(() => {
+            audio.play();
+        }, repeatTimeoutTime);
     }
 
-    audio.volume = settings.volume;
-    audio.currentTime = settings.currentTime;
+    audio.addEventListener("ended", handler);
 
-    return settings;
-  }
+    return () => {
+        audio.removeEventListener("ended", handler);
+        if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+        }
+    }
+}
 
-  function toggleAudio(audio: HTMLAudioElement, play: boolean) {
-    play ? audio.play() : audio.pause();
-  }
+function initAudioAutoPlay(audio: HTMLAudioElement){
+    let audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName, audio);
+    let allowPlaying: boolean = false;
 
-  function handleAudioVolumeChange(e: React.ChangeEvent<HTMLInputElement>, audio: HTMLAudioElement, audioSettings: AudioSettings, setSettings: React.Dispatch<React.SetStateAction<AudioSettings>>) {
-    const newVolume: number = Number(e.target.value);
-    
-    audio.volume = newVolume;
-    setSettings(currentState => {
-      const updated = {...currentState, volume: newVolume, currentTime: audio.currentTime }
-      saveAudioSettings(audioSettings);
-      return updated;
-    });
-  }
-
-  function saveAudioSettings(audioSettings: AudioSettings): void {
-    sessionStorage.setItem(audioSettings.name, JSON.stringify(audioSettings));
-  }
-
-  function getSavedAudioSettings(name: string): AudioSettings | null {
-    let savedSettings: AudioSettings | null = null;
-    const stringSettings: string | null = sessionStorage.getItem(name);
-
-    if (stringSettings) {
-      savedSettings = JSON.parse(stringSettings);
+    if (audioSettings)
+    {
+        setPlaying(audioSettings.playing);
+        allowPlaying = audioSettings.playing;
+    } else {
+        setPlaying(true);
+        allowPlaying = true;
+        audio.volume = volume;
     }
 
-    return savedSettings;
-  }
-/* #endregion */
+    if (allowPlaying) {
+        audio.play().then(() => {
+            setPlaying(true);
+            audioSettings = {
+                volume: audio.volume,
+                playing: true,
+                time: audio.currentTime
+            }
+            saveAudioSettingsToStorage(audioSettingsStorageItemName, audioSettings);
+        }).catch(() => {
+            const handleOnClick = () => {
+                audio.play();
+                setPlaying(true);
+                audioSettings = {
+                    volume: audio.volume,
+                    playing: true,
+                    time: audio.currentTime
+                }
+                saveAudioSettingsToStorage(audioSettingsStorageItemName, audioSettings);
+                window.removeEventListener("click", handleOnClick);
+            }
+            
+            window.addEventListener("click", handleOnClick);
+        });
+    }    
+}
 
-export default AudioControl;
+// #endregion
+
+// #region Internal Interfaces
+
+}
+
+interface AudioControlProps {
+    audio: HTMLAudioElement
+}
+
+// #endregion

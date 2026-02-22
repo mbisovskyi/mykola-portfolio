@@ -6,8 +6,7 @@ import navbarData from "../../data/static/navbar.json";
 import audioFile from "/assets/audio/background-music.mp3";
 
 import "./Navbar.css";
-//import AudioControl from "../audio-control/AudioControl";
-import { AudioPlayer }  from "../audio-player/AudioPlayer";
+import { AudioControl }  from "../audio-control/AudioControl";
 function Navbar() {
     return (
         <>
@@ -17,7 +16,7 @@ function Navbar() {
                         <NavLink key={index} to={link.url} className="nav-link">{link.name}</NavLink>
                     ))}                       
                 </nav>
-                <AudioPlayer audio={new Audio(audioFile)}/>
+                <AudioControl audio={new Audio(audioFile)}/>
             </div>
         </>
     )

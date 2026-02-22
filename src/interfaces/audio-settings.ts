@@ -1,6 +1,5 @@
 export default interface AudioSettings {
-    name: string,
     volume: number,
-    active: boolean,
-    currentTime: number
+    playing: boolean,
+    time: number
 }
