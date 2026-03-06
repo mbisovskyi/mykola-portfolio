@@ -1,8 +1,13 @@
 // React imports
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Utils imports
 import { loadAudioSettingsFromStorage, resetAudioSettingsToStorage, saveAudioSettingsToStorage } from '../../utils/storage-manager';
+
+// React Icon imports
+import { FiPlayCircle } from "react-icons/fi";
+import { FiPauseCircle } from "react-icons/fi";
+import { FiVolume2 } from "react-icons/fi";
 
 // Type imports
 import type AudioSettings from '../../interfaces/audio-settings';
@@ -13,7 +18,13 @@ export function AudioControl({ audio }: AudioControlProps){
     const repeatTimeoutTime: number = 3000;
     const audioSettingsStorageItemName: string = "audioSettings";
 
-    const [_playing, setPlaying] = useState<boolean>(false);
+    const volumeSliderRef = useRef<HTMLDivElement>(null);
+
+    const [playing, setPlaying] = useState<boolean>(() => {
+        const audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName);
+        if (!audioSettings) return false;
+        return audioSettings.playing;
+    });
     const [volume, setVolume] = useState<number>(() => {
         const audioSettings: AudioSettings | null = loadAudioSettingsFromStorage(audioSettingsStorageItemName);
         if (!audioSettings) return 0.1;
@@ -37,10 +48,25 @@ export function AudioControl({ audio }: AudioControlProps){
 
     return (
         <div className={styles.container}>
-            <div>
-                <button onClick={() => {handlePlayPause(audio)}}>Play/Pause</button>
+            <div className={styles.audioControlButtons}>
+                {playing ? 
+                    <div className={styles.audioControlButton}>
+                        <FiPauseCircle onClick={() => {handlePlayPause(audio)}}/>
+                    </div> 
+                : 
+                    <div className={styles.audioControlButton}>
+                        <FiPlayCircle onClick={() => {handlePlayPause(audio)}}/>
+                    </div>
+                }
+
+                <div className={styles.volumeContainer} onMouseOver={handleVolumeMouseOver} onMouseOut={handleVolumeMouseOut}>
+                    <FiVolume2 className={styles.audioControlButton} />
+                    <div className={`${styles.volumeSlider} ${styles.hideVolumeSlider}`} ref={volumeSliderRef}>
+                        <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => {handleVolumeChange(e)}}/>
+                    </div>
+                </div>
             </div>
-            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => {handleVolumeChange(e)}}/>
+            
         </div>
     )
 
@@ -62,6 +88,20 @@ export function AudioControl({ audio }: AudioControlProps){
             resetAudioSettingsToStorage(audioSettingsStorageItemName, audio, { playing: nextState });
             return nextState;
         });
+    }
+
+    function handleVolumeMouseOver(): void {
+        if (volumeSliderRef?.current?.classList) {
+            volumeSliderRef.current.classList.remove(styles.hideVolumeSlider);
+            volumeSliderRef.current.classList.add(styles.showVolumeSlider);
+        }
+    }
+
+    function handleVolumeMouseOut(): void {
+        if (volumeSliderRef?.current?.classList) {
+            volumeSliderRef.current.classList.remove(styles.showVolumeSlider);
+            volumeSliderRef.current.classList.add(styles.hideVolumeSlider);
+        }
     }
 // #endregion
 
