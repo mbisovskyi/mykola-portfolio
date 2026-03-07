@@ -1,4 +1,4 @@
-.container {
+.audioControlContainer {
     display: inline;
     display: flex;
     align-items: center;
@@ -27,38 +27,55 @@
 }
 
 .volumeSlider {
+    appearance: none;
     padding-left: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    font-size: 1rem;
+    align-items: center;
+    position: absolute;
+    left: 1rem;
+    opacity: 0;
+    padding: 0.1rem 0.5rem;
 }
 
-.showVolumeSlider {
-    display: inline;
-    position: absolute;
-    left: 75%;
-    top: -5%;
+.fadeInVolumeSlider {
     animation: fadeIn 0.2s ease-in-out forwards;
 }
 
-.hideVolumeSlider {
-    display: none;
+.fadeOutVolumeSlider {
     animation: fadeOut 0.2s ease-in-out forwards;
 }
 
-.activeMusic path {
-    fill: url(#audioGradient);
+.sliderInput {
+    appearance: none;
+    width: 5rem;
+    height: 6px;
+    margin: 0 0.2rem;
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
 }
 
-.activeMusic {
-  animation: pulsar 0.7s linear infinite alternate;
+.sliderInput::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 5px;
 }
 
-@keyframes pulsar {
-  0% { 
-        transform: scale(1);
-        transform: rotateZ(90);
-}
-  100% { transform: scale(1.15); }
+.sliderInput::-moz-range-thumb {
+    appearance: none;
+    width: 10px;
+    height: 6px;
+    background: var(--primary-color);
+    border-radius: 5px;
 }
 
+.sliderValue {
+    font-size: smaller;
+    user-select: none;
+}
 
 @keyframes fadeIn {
     0% {
@@ -80,7 +97,7 @@
 
 
 @media (max-width: 768px) {
-    .container {
+    .audioControlContainer {
         display: none;
     }
 }

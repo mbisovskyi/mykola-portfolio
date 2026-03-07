@@ -28,6 +28,7 @@
     color: var(--text-color);
     position: relative;
     margin: 0rem 1rem;
+    user-select: none;
 }
 
 .nav-link.active {

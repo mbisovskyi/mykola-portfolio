@@ -7,6 +7,10 @@
     animation: slideInFromRight var(--slide-in-duration) ease-out forwards;
 }
 
+.profileImage {
+    user-select: none;
+}
+
 #profileInfo {
     margin-top: 1rem;
     animation: fadeIn var(--fade-in-duration) ease-in forwards;

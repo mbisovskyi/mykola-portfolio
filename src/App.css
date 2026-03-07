@@ -15,4 +15,5 @@ body {
   padding: 0.5rem;
   font-family: 'Inter', sans-serif;
   background-color: var(--background-color);
+  color: var(--text-color);
 }

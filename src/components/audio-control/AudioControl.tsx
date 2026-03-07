@@ -31,7 +31,6 @@ export function AudioControl({ audio }: AudioControlProps){
         return audioSettings.volume;
     });
 
-
 // #region Rendering
 
     // Effect on the entire component reload
@@ -47,7 +46,7 @@ export function AudioControl({ audio }: AudioControlProps){
 // #region Template
 
     return (
-        <div className={styles.container}>
+        <div className={styles.audioControlContainer}>
             <div className={styles.audioControlButtons}>
                 {playing ? 
                     <div className={styles.audioControlButton}>
@@ -59,14 +58,15 @@ export function AudioControl({ audio }: AudioControlProps){
                     </div>
                 }
 
-                <div className={styles.volumeContainer} onMouseOver={handleVolumeMouseOver} onMouseOut={handleVolumeMouseOut}>
+                <div className={styles.volumeContainer} onMouseEnter={handleVolumeContainerMouseEvent} onMouseLeave={handleVolumeContainerMouseEvent}>
                     <FiVolume2 className={styles.audioControlButton} />
-                    <div className={`${styles.volumeSlider} ${styles.hideVolumeSlider}`} ref={volumeSliderRef}>
-                        <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => {handleVolumeChange(e)}}/>
+                    <div className={styles.volumeSlider} ref={volumeSliderRef}>
+                        <input className={styles.sliderInput} type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => {handleVolumeChange(e)}}/>
+                        <span className={styles.sliderValue}>{(volume * 100).toFixed(0)}</span>
                     </div>
                 </div>
-            </div>
-            
+            </div>   
+             
         </div>
     )
 
@@ -90,18 +90,21 @@ export function AudioControl({ audio }: AudioControlProps){
         });
     }
 
-    function handleVolumeMouseOver(): void {
-        if (volumeSliderRef?.current?.classList) {
-            volumeSliderRef.current.classList.remove(styles.hideVolumeSlider);
-            volumeSliderRef.current.classList.add(styles.showVolumeSlider);
-        }
-    }
+    function handleVolumeContainerMouseEvent(event: React.MouseEvent) {
+        const el = volumeSliderRef.current;
+        if (!el) return;
 
-    function handleVolumeMouseOut(): void {
-        if (volumeSliderRef?.current?.classList) {
-            volumeSliderRef.current.classList.remove(styles.showVolumeSlider);
-            volumeSliderRef.current.classList.add(styles.hideVolumeSlider);
+        switch (event.type) {
+            case "mouseenter":
+                el.classList.remove(styles.fadeOutVolumeSlider);
+                el.classList.add(styles.fadeInVolumeSlider);
+            break;
+            case "mouseleave":
+                el.classList.remove(styles.fadeInVolumeSlider);
+                el.classList.add(styles.fadeOutVolumeSlider);
+            break;
         }
+
     }
 // #endregion
 
