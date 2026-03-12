@@ -12,6 +12,12 @@
     font-size: larger;
 }
 
+.audioControlButtons > div:hover > svg{
+    color: var(--primary-color);
+    transition: 0.1s ease-in-out;
+    cursor: pointer;
+}
+
 .audioControlButtons > div > svg {
     display: flex;
     vertical-align: middle;
@@ -54,6 +60,7 @@
     margin: 0 0.2rem;
     border: 1px solid var(--accent-color);
     border-radius: 5px;
+    cursor: pointer;
 }
 
 .sliderInput::-webkit-slider-thumb {
